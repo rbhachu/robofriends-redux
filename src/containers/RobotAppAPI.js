@@ -1,55 +1,69 @@
 import React, { Component } from 'react';
-import '../css/RobotApp.css';
+import { connect } from 'react-redux'; // import redux connect function 
 import CardsList from '../components/CardsList';
 import SearchBox from '../components/SearchBox';
-import Scroll from '../components/Scroll'; 
 import ErrorBoundary from '../components/ErrorBoundary'; // error checker
-//import { robots } from '../components/robots'; //using api instead
+import { requestRobots, setSearchfield } from '../actions.js'; // import actions
+
+
+// parameter state comes from index.js provider store state(rootReducers)
+const mapStateToProps = (state) => { // recieves a state
+    return {
+        searchField: state.searchRobots.searchField, // return object coming from reducer
+        robots: state.requestRobots.robots,
+        isPending: state.requestRobots.isPending,
+        error: state.requestRobots.error
+    }
+}
+
+// dispatch the DOM changes to call an action. note mapStateToProps returns object, mapDispatchToProps returns function
+// the function returns an object then uses connect to change the data from redecers.
+const mapDispatchToProps = (dispatch) => { // dispatch sends action from mapStateToProps
+    return {
+        onSearchChange: (event) => dispatch(setSearchfield(event.target.value)), // check event for text input change from searchfield
+        //onRequestRobots: () => requestRobots(dispatch)
+        onRequestRobots: () => dispatch(requestRobots())        
+    }
+}
 
 
 class App extends Component {
 
-    constructor() {
-        super() // have to state super before this.x
-        this.state = {
-            robots: [], // start with empty array 
-            searchfield: '' //input box
-        }
-    }
-
     componentDidMount() {
-       fetch('https://jsonplaceholder.typicode.com/users') // get api list
-       .then(response=> response.json()) // convert list into useable formart aka json
-       //.then(users => {}); // emulate empty or long time loading list
-       .then(users => {this.setState({ robots: users })}); // get users from api list/show users on search change
+        this.props.onRequestRobots();
     }
- 
-    onSearchChange = (event) => {
-        this.setState({ searchfield: event.target.value })
-        }
- 
     
     render() {
-        const {robots, searchfield } = this.state; // decstructuring (removes repeating this.state)
+        const { robots, searchField, onSearchChange, isPending } = this.props; //get props
+        const filteredRobots = robots.filter(robot => {
+            return robot.name.toLowerCase().includes(searchField.toLowerCase());
+        })
 
-        const filteredRobots = robots.filter(robot => { // filter robots state
-            return robot.name.toLowerCase().includes(searchfield.toLowerCase());
-    })
-    return !robots.length ? // check if list is talking time to load, display message 'loading'
-        <h1>Loading...</h1> :
-         (
-            <div className='tc'>
-                <h1 className='f1'>RoboFriends</h1>
-                <SearchBox searchChange={this.onSearchChange}/>
-                <Scroll>
-                    <ErrorBoundary>
-                        <CardsList robots={filteredRobots} /> 
-                    </ErrorBoundary>
-                </Scroll>
-            </div>
-        );
+    return (
+            <>
+                { isPending ? 
+                    <div className='tc'>
+                        <header>
+                            <h1 className='f1 fw2 light-blue'>Loading...</h1>
+                        </header>
+                    </div>
+                :
+                    <div className='tc'>
+                        <header>
+                            <h1 className='f1 fw2 light-blue'>RoboFriends</h1>
+                        </header>
+                        <section>
+                            <SearchBox searchChange={onSearchChange}/>
+                            <ErrorBoundary>
+                                <CardsList robots={filteredRobots} /> 
+                            </ErrorBoundary>
+                        </section>
+                    </div>
+                }
+            </>
+        )
     }
-    
 }
 
-export default App;
+// action done from mapDispatchToProps will channge state from mapStateToProps
+export default connect(mapStateToProps, mapDispatchToProps)(App); // pass redux connect with App (defined as a higher order component), pass actions
