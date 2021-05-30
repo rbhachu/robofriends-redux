@@ -3,7 +3,7 @@ import { connect } from 'react-redux'; // import redux connect function
 import CardsList from '../components/CardsList';
 import SearchBox from '../components/SearchBox';
 import ErrorBoundary from '../components/ErrorBoundary'; // error checker
-import { requestRobots, setSearchfield } from '../actions.js'; // import actions
+import { requestRobots, setSearchfield } from '../actions'; // import actions
 
 
 // parameter state comes from index.js provider store state(rootReducers)
